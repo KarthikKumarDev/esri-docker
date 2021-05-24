@@ -1,16 +1,18 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import MapView from "@arcgis/core/views/MapView";
 import Map from "@arcgis/core/Map";
 import Graphic from "@arcgis/core/Graphic";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
-import collegeData from "./collegeData.json";
+import * as axios from "axios";
 
 import "./ESRIMap.css";
 
 function ESRIMap() {
   const mapDiv = useRef(null);
+  const [collegeData, setCollegeData] = useState([]);
+  const [map, setMap] = useState(null);
 
-  const addUniversity = (map) => {
+  const addUniversity = () => {
     let markerSymbol = {
       type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
       color: [25, 0, 220],
@@ -44,6 +46,11 @@ function ESRIMap() {
     map.add(graphicsLayer);
   };
 
+  async function fetchCollegeData() {
+    let collegeData = await axios.get("http://localhost:3000/colleges");
+    setCollegeData(collegeData.data);
+  }
+
   useEffect(() => {
     if (mapDiv.current) {
       /**
@@ -61,9 +68,18 @@ function ESRIMap() {
         zoom: 3,
         map: map,
       });
-      addUniversity(map);
+
+      setMap(map);
+
+      fetchCollegeData();
     }
   }, []);
+
+  useEffect(() => {
+    if (collegeData.length) {
+      addUniversity();
+    }
+  }, [collegeData]);
 
   return <div className="mapDiv" ref={mapDiv}></div>;
 }
