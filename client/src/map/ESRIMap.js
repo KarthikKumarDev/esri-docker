@@ -47,7 +47,7 @@ function ESRIMap() {
   };
 
   async function fetchCollegeData() {
-    let collegeData = await axios.get("http://localhost:3000/colleges");
+    let collegeData = await axios.get("/api/colleges");
     setCollegeData(collegeData.data);
   }
 
