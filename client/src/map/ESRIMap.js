@@ -26,8 +26,8 @@ function ESRIMap() {
     collegeData.forEach((university) => {
       var point = {
         type: "point", // autocasts as new Point()
-        longitude: university.Longitude,
-        latitude: university.Latitude,
+        longitude: university.longitude,
+        latitude: university.latitude,
       };
 
       let pointGraphic = new Graphic({

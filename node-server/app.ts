@@ -33,19 +33,32 @@ const pgClient = new Pool({
   password: pgPassword,
   port: pgPort,
 });
-
+let dbInitFlag = true;
 pgClient.on("error", () => console.log("Connection lost to Postgres"));
 
 pgClient.on("connect", (client) => {
   client
     .query(
-      "CREATE TABLE IF NOT EXISTS CollegeData (PlaceName VARCHAR (100) Latitude NUMERIC Longitude NUMERIC)"
+      "CREATE TABLE IF NOT EXISTS CollegeData (PlaceName VARCHAR (100), Latitude NUMERIC, Longitude NUMERIC)"
     )
+    .then((res) => {
+      if (dbInitFlag) {
+        collegeData.forEach((college) => {
+          client
+            .query(
+              `INSERT INTO CollegeData(PlaceName, Latitude, Longitude) VALUES ('${college["Place Name"]}', '${college.Latitude}', '${college.Longitude}');`
+            )
+            .catch((err) => console.error(err));
+        });
+      }
+      dbInitFlag = false;
+    })
     .catch((err) => console.error(err));
 });
 
-app.get("/colleges", (req, res) => {
-  res.send(collegeData);
+app.get("/colleges", async (req, res) => {
+  const data = await pgClient.query("SELECT * FROM CollegeData");
+  res.send(data.rows);
 });
 
 app.listen(port, () => {
