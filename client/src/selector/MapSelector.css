@@ -1,0 +1,9 @@
+.radio-selector{
+    position: absolute;
+    z-index: 1;
+    background: whitesmoke;
+    padding: 10px;
+    border-radius: 5px;
+    right: 10px;
+    top: 10px;
+}
