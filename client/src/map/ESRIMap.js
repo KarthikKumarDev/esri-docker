@@ -7,12 +7,24 @@ import * as axios from "axios";
 
 import "./ESRIMap.css";
 
-function ESRIMap() {
+function ESRIMap(props) {
   const mapDiv = useRef(null);
   const [collegeData, setCollegeData] = useState([]);
+  const [hospitalData, setHospitalData] = useState([]);
   const [map, setMap] = useState(null);
 
-  const addUniversity = () => {
+  const plotMapLayer = () => {
+    if (collegeData.length || hospitalData.length) {
+      map.removeAll();
+      if (props.mapSelection) {
+        addUniversityLayer();
+      } else {
+        addHospitalLayer();
+      }
+    }
+  };
+
+  const addUniversityLayer = () => {
     let markerSymbol = {
       type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
       color: [25, 0, 220],
@@ -46,9 +58,48 @@ function ESRIMap() {
     map.add(graphicsLayer);
   };
 
+  const addHospitalLayer = () => {
+    let markerSymbol = {
+      type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+      color: [25, 0, 220],
+      outline: {
+        // autocasts as new SimpleLineSymbol()
+        color: [255, 255, 102],
+        width: 2,
+      },
+    };
+    let markerGraphics = [];
+    hospitalData.forEach((hospital) => {
+      var point = {
+        type: "point", // autocasts as new Point()
+        longitude: hospital.longitude,
+        latitude: hospital.latitude,
+      };
+
+      let pointGraphic = new Graphic({
+        geometry: point,
+        symbol: markerSymbol,
+      });
+
+      markerGraphics.push(pointGraphic);
+    });
+
+    let graphicsLayer = new GraphicsLayer({
+      id: "university",
+      graphics: markerGraphics,
+    });
+
+    map.add(graphicsLayer);
+  };
+
   async function fetchCollegeData() {
     let collegeData = await axios.get("/api/colleges");
     setCollegeData(collegeData.data);
+  }
+
+  async function fetchHospitalData() {
+    let hospitalData = await axios.get("/api/hospitals");
+    setHospitalData(hospitalData.data);
   }
 
   useEffect(() => {
@@ -72,14 +123,13 @@ function ESRIMap() {
       setMap(map);
 
       fetchCollegeData();
+      fetchHospitalData();
     }
   }, []);
 
   useEffect(() => {
-    if (collegeData.length) {
-      addUniversity();
-    }
-  }, [collegeData]);
+    plotMapLayer();
+  }, [props.mapSelection, collegeData, hospitalData]);
 
   return <div className="mapDiv" ref={mapDiv}></div>;
 }
